@@ -41,13 +41,13 @@ Antes de começar, você vai precisar ter instalado em sua máquina:
 
 ### Passo a Passo
 1. **Clone o repositório:**
-   ```git clone [URL_DO_SEU_REPOSITORIO_AQUI]´´´
+   `git clone [URL_DO_SEU_REPOSITORIO_AQUI]`
 
 2. **Navegue até a pasta do projeto:**
-   ```git clone [URL_DO_SEU_REPOSITORIO_AQUI]´´´
+   `git clone [URL_DO_SEU_REPOSITORIO_AQUI]`
 
 3. **Execute a aplicação com o Maven:**
-   ```mvn spring-boot:run´´´
+   `mvn spring-boot:run`
 
 4. **Acesse a API:**
 - O servidor estará rodando em http://localhost:8080.
