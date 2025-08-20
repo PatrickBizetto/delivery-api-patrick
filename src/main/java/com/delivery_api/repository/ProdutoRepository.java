@@ -28,4 +28,12 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     @Query("SELECT COUNT(p) FROM Produto p WHERE p.restaurante.id = :restauranteId AND p.disponivel = true")
     Long countByRestauranteId(@Param("restauranteId") Long restauranteId);
+
+    @Query(value = "SELECT p.nome, COUNT(ip.produto_id) as quantidade_vendida " +
+                   "FROM produto p " +
+                   "LEFT JOIN item_pedido ip ON p.id = ip.produto_id " +
+                   "GROUP BY p.id, p.nome " +
+                   "ORDER BY quantidade_vendida DESC " +
+                   "LIMIT 5", nativeQuery = true)
+    List<Object[]> produtosMaisVendidos();
 }

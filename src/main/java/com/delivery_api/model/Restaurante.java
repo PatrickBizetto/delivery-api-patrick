@@ -2,6 +2,8 @@ package com.delivery_api.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -9,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Data
+@NoArgsConstructor
 public class Restaurante {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,4 +31,13 @@ public class Restaurante {
     @JsonIgnore
     @OneToMany(mappedBy = "restaurante")
     private List<Pedido> pedidos;
+
+    public Restaurante(String nome, String categoria, String endereco, String telefone, BigDecimal taxaEntrega, boolean ativo) {
+        this.nome = nome;
+        this.categoria = categoria;
+        this.endereco = endereco;
+        this.telefone = telefone;
+        this.taxaEntrega = taxaEntrega;
+        this.ativo = ativo;
+    }
 }

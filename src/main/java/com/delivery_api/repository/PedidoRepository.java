@@ -36,4 +36,23 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     @Query("SELECT SUM(p.valorTotal) FROM Pedido p WHERE p.dataPedido BETWEEN :inicio AND :fim AND p.status NOT IN ('CANCELADO')")
     BigDecimal calcularVendasPorPeriodo(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
+
+    @Query("SELECT p.restaurante.nome, SUM(p.valorTotal) " +
+           "FROM Pedido p " +
+           "GROUP BY p.restaurante.id, p.restaurante.nome " +
+           "ORDER BY SUM(p.valorTotal) DESC")
+    List<Object[]> calcularTotalVendasPorRestaurante();
+
+    @Query("SELECT p FROM Pedido p WHERE p.valorTotal > :valor ORDER BY p.valorTotal DESC")
+    List<Pedido> buscarPedidosComValorAcimaDe(@Param("valor") BigDecimal valor);
+
+    @Query("SELECT p FROM Pedido p " +
+           "WHERE p.dataPedido BETWEEN :inicio AND :fim " +
+           "AND p.status = :status " +
+           "ORDER BY p.dataPedido DESC")
+    List<Pedido> relatorioPedidosPorPeriodoEStatus(
+        @Param("inicio") LocalDateTime inicio,
+        @Param("fim") LocalDateTime fim,
+        @Param("status") StatusPedido status
+    );
 }
