@@ -111,4 +111,4 @@ O projeto está organizado em uma arquitetura de camadas para separação de res
 
 ## 👨‍💻 Desenvolvedor
 Patrick B. Cruz - TI 56 - Arquitetura de Sistemas  
-Desenvolvido com JDK 21 e Spring Boot 3.5.4
+Desenvolvido com JDK 21 e Spring Boot 3.5.5

@@ -1,81 +1,20 @@
 package com.delivery_api.service;
 
-import com.delivery_api.model.Cliente;
-import com.delivery_api.repository.ClienteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.delivery_api.dto.ClienteDTO;
+import com.delivery_api.dto.ClienteResponseDTO;
 import java.util.List;
-import java.util.Optional;
 
-@Service
-@Transactional
-public class ClienteService {
+public interface ClienteService {
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    ClienteResponseDTO cadastrarCliente(ClienteDTO dto);
 
-    public Cliente cadastrar(Cliente cliente) {
-        if (clienteRepository.existsByEmail(cliente.getEmail())) {
-            throw new IllegalArgumentException("Email já cadastrado: " + cliente.getEmail());
-        }
-        validarDadosCliente(cliente);
-        cliente.setAtivo(true);
-        return clienteRepository.save(cliente);
-    }
+    ClienteResponseDTO buscarClientePorId(Long id);
 
-    @Transactional(readOnly = true)
-    public Optional<Cliente> buscarPorId(Long id) {
-        return clienteRepository.findById(id);
-    }
+    ClienteResponseDTO buscarClientePorEmail(String email);
 
-    @Transactional(readOnly = true)
-    public Optional<Cliente> buscarPorEmail(String email) {
-        return clienteRepository.findByEmail(email);
-    }
+    ClienteResponseDTO atualizarCliente(Long id, ClienteDTO dto);
 
-    @Transactional(readOnly = true)
-    public List<Cliente> listarAtivos() {
-        return clienteRepository.findByAtivoTrue();
-    }
+    ClienteResponseDTO ativarDesativarCliente(Long id);
 
-    public Cliente atualizar(Long id, Cliente clienteAtualizado) {
-        Cliente cliente = buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + id));
-
-        if (!cliente.getEmail().equals(clienteAtualizado.getEmail()) &&
-                clienteRepository.existsByEmail(clienteAtualizado.getEmail())) {
-            throw new IllegalArgumentException("Email já cadastrado: " + clienteAtualizado.getEmail());
-        }
-
-        cliente.setNome(clienteAtualizado.getNome());
-        cliente.setEmail(clienteAtualizado.getEmail());
-        cliente.setTelefone(clienteAtualizado.getTelefone());
-        cliente.setEndereco(clienteAtualizado.getEndereco());
-        return clienteRepository.save(cliente);
-    }
-
-    public void inativar(Long id) {
-        Cliente cliente = buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + id));
-        cliente.inativar();
-        clienteRepository.save(cliente);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Cliente> buscarPorNome(String nome) {
-        return clienteRepository.findByNomeContainingIgnoreCase(nome);
-    }
-
-    private void validarDadosCliente(Cliente cliente) {
-        if (cliente.getNome() == null || cliente.getNome().trim().isEmpty()) {
-            throw new IllegalArgumentException("Nome é obrigatório");
-        }
-        if (cliente.getEmail() == null || cliente.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email é obrigatório");
-        }
-        if (cliente.getNome().length() < 2) {
-            throw new IllegalArgumentException("Nome deve ter pelo menos 2 caracteres");
-        }
-    }
+    List<ClienteResponseDTO> listarClientesAtivos();
 }

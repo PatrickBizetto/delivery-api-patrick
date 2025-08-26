@@ -1,16 +1,20 @@
 package com.delivery_api.controller;
 
-import com.delivery_api.model.Pedido;
-import com.delivery_api.enums.StatusPedido;
+import com.delivery_api.dto.ItemPedidoDTO;
+import com.delivery_api.dto.PedidoDTO;
+import com.delivery_api.dto.PedidoResponseDTO;
+import com.delivery_api.dto.StatusPedidoDTO;
 import com.delivery_api.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/pedidos")
+@RequestMapping("/api/pedidos")
 @CrossOrigin(origins = "*")
 public class PedidoController {
 
@@ -18,72 +22,38 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @PostMapping
-    public ResponseEntity<?> criarPedido(@RequestParam Long clienteId, @RequestParam Long restauranteId) {
-        try {
-            Pedido pedido = pedidoService.criarPedido(clienteId, restauranteId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(pedido);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/{pedidoId}/itens")
-    public ResponseEntity<?> adicionarItem(@PathVariable Long pedidoId, @RequestParam Long produtoId, @RequestParam Integer quantidade) {
-        try {
-            Pedido pedido = pedidoService.adicionarItem(pedidoId, produtoId, quantidade);
-            return ResponseEntity.ok(pedido);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        }
-    }
-
-    @PutMapping("/{pedidoId}/confirmar")
-    public ResponseEntity<?> confirmarPedido(@PathVariable Long pedidoId) {
-        try {
-            Pedido pedido = pedidoService.confirmarPedido(pedidoId);
-            return ResponseEntity.ok(pedido);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        }
-    }
-
-    @PutMapping("/{pedidoId}/status")
-    public ResponseEntity<?> atualizarStatus(@PathVariable Long pedidoId, @RequestParam StatusPedido status) {
-        try {
-            Pedido pedido = pedidoService.atualizarStatus(pedidoId, status);
-            return ResponseEntity.ok(pedido);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        }
-    }
-    
-    @PutMapping("/{pedidoId}/cancelar")
-    public ResponseEntity<?> cancelarPedido(@PathVariable Long pedidoId, @RequestParam(required = false) String motivo) {
-        try {
-            Pedido pedido = pedidoService.cancelarPedido(pedidoId, motivo);
-            return ResponseEntity.ok(pedido);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        }
+    public ResponseEntity<PedidoResponseDTO> criarPedido(@Valid @RequestBody PedidoDTO dto) {
+        PedidoResponseDTO pedido = pedidoService.criarPedido(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(pedido);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Pedido> buscarPorId(@PathVariable Long id) {
-        return pedidoService.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<PedidoResponseDTO> buscarPorId(@PathVariable Long id) {
+        PedidoResponseDTO pedido = pedidoService.buscarPedidoPorId(id);
+        return ResponseEntity.ok(pedido);
     }
 
     @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<List<Pedido>> listarPorCliente(@PathVariable Long clienteId) {
-        List<Pedido> pedidos = pedidoService.listarPorCliente(clienteId);
+    public ResponseEntity<List<PedidoResponseDTO>> buscarPorCliente(@PathVariable Long clienteId) {
+        List<PedidoResponseDTO> pedidos = pedidoService.buscarPedidosPorCliente(clienteId);
         return ResponseEntity.ok(pedidos);
     }
 
-    @GetMapping("/numero/{numeroPedido}")
-    public ResponseEntity<Pedido> buscarPorNumero(@PathVariable String numeroPedido) {
-        return pedidoService.buscarPorNumero(numeroPedido)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<PedidoResponseDTO> atualizarStatus(@PathVariable Long id, @Valid @RequestBody StatusPedidoDTO statusDTO) {
+        PedidoResponseDTO pedido = pedidoService.atualizarStatusPedido(id, statusDTO.getStatus());
+        return ResponseEntity.ok(pedido);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancelarPedido(@PathVariable Long id) {
+        pedidoService.cancelarPedido(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @PostMapping("/calcular")
+    public ResponseEntity<BigDecimal> calcularTotal(@Valid @RequestBody List<ItemPedidoDTO> itens) {
+        BigDecimal total = pedidoService.calcularTotalPedido(itens);
+        return ResponseEntity.ok(total);
     }
 }

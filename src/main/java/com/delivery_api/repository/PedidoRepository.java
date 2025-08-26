@@ -14,6 +14,8 @@ import java.util.List;
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByClienteOrderByDataPedidoDesc(Cliente cliente);
+
+    List<Pedido> findByClienteId(Long clienteId);
     
     @Query("SELECT DISTINCT p FROM Pedido p LEFT JOIN FETCH p.itens WHERE p.cliente.id = :clienteId ORDER BY p.dataPedido DESC")
     List<Pedido> findByClienteIdOrderByDataPedidoDesc(Long clienteId);
