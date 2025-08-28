@@ -1,5 +1,7 @@
 package com.delivery_api.service.impl;
 
+import com.delivery_api.dto.CalculoPedidoDTO;
+import com.delivery_api.dto.CalculoPedidoResponseDTO;
 import com.delivery_api.dto.ItemPedidoDTO;
 import com.delivery_api.dto.PedidoDTO;
 import com.delivery_api.dto.PedidoResponseDTO;
@@ -9,11 +11,15 @@ import com.delivery_api.exception.BusinessException;
 import com.delivery_api.exception.EntityNotFoundException;
 import com.delivery_api.repository.*;
 import com.delivery_api.service.PedidoService;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -153,6 +159,48 @@ public class PedidoServiceImpl implements PedidoService {
         }
         pedido.setStatus(StatusPedido.CANCELADO);
         pedidoRepository.save(pedido);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PedidoResponseDTO> listarPedidos(StatusPedido status, LocalDate dataInicio, LocalDate dataFim, Pageable pageable) {
+        // Lógica de busca com filtros precisa ser implementada no repositório.
+        // Por enquanto, usaremos o findAll como exemplo simples.
+        Page<Pedido> pedidosPage = pedidoRepository.findAll(pageable);
+        return pedidosPage.map(pedido -> modelMapper.map(pedido, PedidoResponseDTO.class));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> buscarPedidosPorRestaurante(Long restauranteId, StatusPedido status) {
+        // A lógica de filtro por status pode ser adicionada aqui ou no repositório.
+        List<Pedido> pedidos = pedidoRepository.findByRestauranteId(restauranteId);
+        return pedidos.stream()
+                .map(pedido -> modelMapper.map(pedido, PedidoResponseDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public CalculoPedidoResponseDTO calcularTotalPedido(CalculoPedidoDTO dto) {
+        Restaurante restaurante = restauranteRepository.findById(dto.getRestauranteId())
+                .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado"));
+
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (ItemPedidoDTO itemDTO : dto.getItens()) {
+            Produto produto = produtoRepository.findById(itemDTO.getProdutoId())
+                    .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + itemDTO.getProdutoId()));
+            subtotal = subtotal.add(produto.getPreco().multiply(BigDecimal.valueOf(itemDTO.getQuantidade())));
+        }
+
+        BigDecimal taxaEntrega = restaurante.getTaxaEntrega();
+        BigDecimal valorTotal = subtotal.add(taxaEntrega);
+
+        CalculoPedidoResponseDTO response = new CalculoPedidoResponseDTO();
+        response.setSubtotalItens(subtotal);
+        response.setTaxaEntrega(taxaEntrega);
+        response.setValorTotal(valorTotal);
+
+        return response;
     }
 
     private boolean isTransicaoValida(StatusPedido statusAtual, StatusPedido novoStatus) {

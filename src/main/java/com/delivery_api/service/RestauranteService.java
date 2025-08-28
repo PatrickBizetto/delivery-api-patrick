@@ -1,20 +1,27 @@
 package com.delivery_api.service;
 
-import com.delivery_api.model.Restaurante;
+import com.delivery_api.dto.RestauranteDTO;
+import com.delivery_api.dto.RestauranteResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 public interface RestauranteService {
 
-    Restaurante cadastrar(Restaurante restaurante);
+    RestauranteResponseDTO cadastrarRestaurante(RestauranteDTO dto);
 
-    Optional<Restaurante> buscarPorId(Long id);
+    Page<RestauranteResponseDTO> listarRestaurantes(String categoria, Boolean ativo, Pageable pageable);
 
-    List<Restaurante> listarAtivos();
+    RestauranteResponseDTO buscarRestaurantePorId(Long id);
 
-    List<Restaurante> buscarPorCategoria(String categoria);
+    RestauranteResponseDTO atualizarRestaurante(Long id, RestauranteDTO dto);
 
-    Restaurante atualizar(Long id, Restaurante restauranteAtualizado);
+    RestauranteResponseDTO alterarStatusRestaurante(Long id);
+    
+    List<RestauranteResponseDTO> buscarRestaurantesPorCategoria(String categoria);
 
-    void inativar(Long id);
+    BigDecimal calcularTaxaEntrega(Long id, String cep);
+
+    List<RestauranteResponseDTO> buscarRestaurantesProximos(String cep, Integer raio);
 }

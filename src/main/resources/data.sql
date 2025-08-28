@@ -1,28 +1,13 @@
--- Dados de exemplo para testes
+-- data.sql (CORRIGIDO)
 
--- Inserir clientes
-INSERT INTO cliente (nome, email, telefone, endereco, ativo) VALUES
-('João Silva', 'joao@email.com', '(11) 99999-1111', 'Rua A, 123 - São Paulo/SP', true),
-('Maria Santos', 'maria@email.com', '(11) 99999-2222', 'Rua B, 456 - São Paulo/SP', true),
-('Pedro Oliveira', 'pedro@email.com', '(11) 99999-3333', 'Rua C, 789 - São Paulo/SP', true);
+-- Adicionamos TELEFONE e ENDERECO com valores nulos para a inserção funcionar
+INSERT INTO CLIENTE (ID, NOME, EMAIL, TELEFONE, ENDERECO, ATIVO) VALUES (1, 'Cliente Teste', 'cliente@teste.com', null, null, true);
 
--- Inserir restaurantes
-INSERT INTO restaurante (nome, categoria, endereco, telefone, taxa_entrega, ativo) VALUES
-('Pizzaria Bella', 'Italiana', 'Av. Paulista, 1000 - São Paulo/SP', '(11) 3333-1111', 5.00, true),
-('Burger House', 'Hamburgueria', 'Rua Augusta, 500 - São Paulo/SP', '(11) 3333-2222', 3.50, true),
-('Sushi Master', 'Japonesa', 'Rua Liberdade, 200 - São Paulo/SP', '(11) 3333-3333', 8.00, true);
+-- O resto do seu arquivo continua igual...
+INSERT INTO RESTAURANTE (ID, NOME, CATEGORIA, ENDERECO, TELEFONE, TAXA_ENTREGA, TEMPO_ENTREGA, HORARIO_FUNCIONAMENTO, ATIVO) VALUES (1, 'Pizzaria Italiana Deliciosa', 'Italiana', 'Rua da Pizza, 10', '11987654321', 5.00, 45, '18:00-23:00', true);
+INSERT INTO RESTAURANTE (ID, NOME, CATEGORIA, ENDERECO, TELEFONE, TAXA_ENTREGA, TEMPO_ENTREGA, HORARIO_FUNCIONAMENTO, ATIVO) VALUES (2, 'Cantina da Nona', 'Italiana', 'Av. Massa, 20', '11912345678', 7.50, 50, '19:00-00:00', true);
+INSERT INTO RESTAURANTE (ID, NOME, CATEGORIA, ENDERECO, TELEFONE, TAXA_ENTREGA, TEMPO_ENTREGA, HORARIO_FUNCIONAMENTO, ATIVO) VALUES (3, 'Sushi House', 'Japonesa', 'Travessa do Peixe, 30', '11955554444', 12.00, 60, '12:00-22:00', false);
 
--- Inserir produtos
-INSERT INTO produto (nome, descricao, preco, categoria, disponivel, restaurante_id) VALUES
--- Pizzaria Bella (ID 1)
-('Pizza Margherita', 'Molho de tomate, mussarela e manjericão', 35.90, 'Pizza', true, 1),
-('Pizza Calabresa', 'Molho de tomate, mussarela e calabresa', 38.90, 'Pizza', true, 1),
-('Lasanha Bolonhesa', 'Lasanha tradicional com molho bolonhesa', 28.90, 'Massa', true, 1),
--- Burger House (ID 2)
-('X-Burger', 'Hambúrguer, queijo, alface e tomate', 18.90, 'Hambúrguer', true, 2),
-('X-Bacon', 'Hambúrguer, queijo, bacon, alface e tomate', 22.90, 'Hambúrguer', true, 2),
-('Batata Frita', 'Porção de batata frita crocante', 12.90, 'Acompanhamento', true, 2),
--- Sushi Master (ID 3)
-('Combo Sashimi', '15 peças de sashimi variado', 45.90, 'Sashimi', true, 3),
-('Hot Roll Salmão', '8 peças de hot roll de salmão', 32.90, 'Hot Roll', true, 3),
-('Temaki Atum', 'Temaki de atum com cream cheese', 15.90, 'Temaki', true, 3);
+INSERT INTO PRODUTO (ID, NOME, DESCRICAO, PRECO, CATEGORIA, DISPONIVEL, RESTAURANTE_ID) VALUES (1, 'Pizza Margherita', 'Molho de tomate, mussarela e manjericão', 45.00, 'Pizza Salgada', true, 1);
+INSERT INTO PRODUTO (ID, NOME, DESCRICAO, PRECO, CATEGORIA, DISPONIVEL, RESTAURANTE_ID) VALUES (2, 'Refrigerante 2L', 'Coca-Cola, Guaraná ou Fanta', 12.50, 'Bebidas', true, 1);
+INSERT INTO PRODUTO (ID, NOME, DESCRICAO, PRECO, CATEGORIA, DISPONIVEL, RESTAURANTE_ID) VALUES (3, 'Pizza Calabresa', 'Molho, calabresa e cebola', 48.00, 'Pizza Salgada', false, 1);

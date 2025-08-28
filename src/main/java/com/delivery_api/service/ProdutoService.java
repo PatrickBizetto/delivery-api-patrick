@@ -1,23 +1,24 @@
 package com.delivery_api.service;
 
-import com.delivery_api.model.Produto;
-import java.math.BigDecimal;
+import com.delivery_api.dto.ProdutoDTO;
+import com.delivery_api.dto.ProdutoResponseDTO;
 import java.util.List;
-import java.util.Optional;
 
 public interface ProdutoService {
 
-    Produto cadastrar(Produto produto, Long restauranteId);
+    ProdutoResponseDTO cadastrarProduto(ProdutoDTO dto);
 
-    Optional<Produto> buscarPorId(Long id);
+    ProdutoResponseDTO buscarProdutoPorId(Long id);
 
-    List<Produto> listarPorRestaurante(Long restauranteId);
+    ProdutoResponseDTO atualizarProduto(Long id, ProdutoDTO dto);
 
-    List<Produto> buscarPorCategoria(String categoria);
+    void removerProduto(Long id);
 
-    Produto atualizar(Long id, Produto produtoAtualizado);
+    ProdutoResponseDTO alterarDisponibilidade(Long id);
 
-    void alterarDisponibilidade(Long id, boolean disponivel);
+    List<ProdutoResponseDTO> buscarProdutosPorCategoria(String categoria);
 
-    List<Produto> buscarPorFaixaPreco(BigDecimal precoMin, BigDecimal precoMax);
+    List<ProdutoResponseDTO> buscarProdutosPorNome(String nome);
+    
+    List<ProdutoResponseDTO> buscarProdutosPorRestaurante(Long restauranteId, Boolean disponivel);
 }

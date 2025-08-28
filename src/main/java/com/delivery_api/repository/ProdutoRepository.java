@@ -36,4 +36,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
                    "ORDER BY quantidade_vendida DESC " +
                    "LIMIT 5", nativeQuery = true)
     List<Object[]> produtosMaisVendidos();
+
+    List<Produto> findByRestauranteId(Long restauranteId);
 }

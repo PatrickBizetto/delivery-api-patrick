@@ -24,6 +24,9 @@ public class Restaurante {
     private BigDecimal taxaEntrega;
     private boolean ativo;
 
+    private Integer tempoEntrega;
+    private String horarioFuncionamento;
+
     @JsonIgnore
     @OneToMany(mappedBy = "restaurante")
     private List<Produto> produtos;
@@ -32,12 +35,14 @@ public class Restaurante {
     @OneToMany(mappedBy = "restaurante")
     private List<Pedido> pedidos;
 
-    public Restaurante(String nome, String categoria, String endereco, String telefone, BigDecimal taxaEntrega, boolean ativo) {
+    public Restaurante(String nome, String categoria, String endereco, String telefone, BigDecimal taxaEntrega, boolean ativo, Integer tempoEntrega, String horarioFuncionamento) {
         this.nome = nome;
         this.categoria = categoria;
         this.endereco = endereco;
         this.telefone = telefone;
         this.taxaEntrega = taxaEntrega;
+        this.tempoEntrega = tempoEntrega;
+        this.horarioFuncionamento = horarioFuncionamento;
         this.ativo = ativo;
     }
 }
