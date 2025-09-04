@@ -30,6 +30,8 @@ public interface RestauranteRepository extends JpaRepository<Restaurante, Long> 
     @Query("SELECT DISTINCT r.categoria FROM Restaurante r WHERE r.ativo = true ORDER BY r.categoria")
     List<String> findCategoriasDisponiveis();
 
+    boolean existsByTelefone(String telefone);
+
     @Query("SELECT r.nome as nomeRestaurante, " +
            "SUM(p.valorTotal) as totalVendas, " +
            "COUNT(p.id) as quantidadePedidos " +

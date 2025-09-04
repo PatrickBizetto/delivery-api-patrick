@@ -1,27 +1,52 @@
 package com.delivery_api.exception;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
+/**
+ * A anotação @JsonInclude(JsonInclude.Include.NON_NULL) garante que
+ * campos nulos (como 'errorCode' ou 'details') não sejam incluídos no JSON final.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime timestamp;
     private int status;
     private String error;
     private String message;
-    private LocalDateTime timestamp;
+    private String path;
+    private String errorCode;
+    private Map<String, String> details;
 
-    public ErrorResponse(int status, String error, String message, LocalDateTime timestamp) {
+    public ErrorResponse() {
+        this.timestamp = LocalDateTime.now();
+    }
+
+    public ErrorResponse(int status, String error, String message, String path) {
+        this();
         this.status = status;
         this.error = error;
         this.message = message;
-        this.timestamp = timestamp;
+        this.path = path;
     }
 
     // Getters e Setters
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
     public int getStatus() { return status; }
     public void setStatus(int status) { this.status = status; }
     public String getError() { return error; }
     public void setError(String error) { this.error = error; }
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public String getPath() { return path; }
+    public void setPath(String path) { this.path = path; }
+    public String getErrorCode() { return errorCode; }
+    public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
+    public Map<String, String> getDetails() { return details; }
+    public void setDetails(Map<String, String> details) { this.details = details; }
 }

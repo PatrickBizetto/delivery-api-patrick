@@ -2,10 +2,11 @@ package com.delivery_api.service.impl;
 
 import com.delivery_api.dto.RestauranteDTO;
 import com.delivery_api.dto.RestauranteResponseDTO;
-import com.delivery_api.model.Restaurante; // Assumindo que sua entidade está em com.delivery_api.model
+import com.delivery_api.exception.ConflictException;
+import com.delivery_api.model.Restaurante;
 import com.delivery_api.repository.RestauranteRepository;
 import com.delivery_api.service.RestauranteService;
-import jakarta.persistence.EntityNotFoundException;
+import com.delivery_api.exception.EntityNotFoundException; 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,29 +26,24 @@ public class RestauranteServiceImpl implements RestauranteService {
     private RestauranteRepository restauranteRepository;
 
     @Autowired
-    private ModelMapper modelMapper; // Injeta o ModelMapper
+    private ModelMapper modelMapper;
 
     @Override
     public RestauranteResponseDTO cadastrarRestaurante(RestauranteDTO dto) {
-        // Converte o DTO para a Entidade
+        if (restauranteRepository.existsByTelefone(dto.getTelefone())) {
+            throw new ConflictException("Telefone já cadastrado no sistema.", "telefone", dto.getTelefone());
+        }
+        
         Restaurante restaurante = modelMapper.map(dto, Restaurante.class);
-        restaurante.setAtivo(true); // Regra de negócio: sempre começa como ativo
-        
-        // Salva a entidade no banco
+        restaurante.setAtivo(true);
         Restaurante restauranteSalvo = restauranteRepository.save(restaurante);
-        
-        // Converte a Entidade salva de volta para o DTO de resposta
         return modelMapper.map(restauranteSalvo, RestauranteResponseDTO.class);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<RestauranteResponseDTO> listarRestaurantes(String categoria, Boolean ativo, Pageable pageable) {
-        // Lógica de busca com filtros será necessária no repositório
-        // Por enquanto, vamos usar o findAll como exemplo
         Page<Restaurante> restaurantesPage = restauranteRepository.findAll(pageable);
-        
-        // Mapeia a página de Entidades para uma página de DTOs
         return restaurantesPage.map(restaurante -> modelMapper.map(restaurante, RestauranteResponseDTO.class));
     }
 
@@ -55,16 +51,16 @@ public class RestauranteServiceImpl implements RestauranteService {
     @Transactional(readOnly = true)
     public RestauranteResponseDTO buscarRestaurantePorId(Long id) {
         Restaurante restaurante = restauranteRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado com ID: " + id));
+                // <<-- CORREÇÃO 2: AGORA ESTA LINHA USA A EXCEÇÃO CORRETA
+                .orElseThrow(() -> new EntityNotFoundException("Restaurante", id)); 
         return modelMapper.map(restaurante, RestauranteResponseDTO.class);
     }
 
     @Override
     public RestauranteResponseDTO atualizarRestaurante(Long id, RestauranteDTO dto) {
         Restaurante restaurante = restauranteRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Restaurante", id));
         
-        // Usa o modelMapper para atualizar os campos do objeto existente
         modelMapper.map(dto, restaurante);
         
         Restaurante restauranteAtualizado = restauranteRepository.save(restaurante);
@@ -74,9 +70,9 @@ public class RestauranteServiceImpl implements RestauranteService {
     @Override
     public RestauranteResponseDTO alterarStatusRestaurante(Long id) {
         Restaurante restaurante = restauranteRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Restaurante", id));
         
-        restaurante.setAtivo(!restaurante.isAtivo()); // Inverte o status atual
+        restaurante.setAtivo(!restaurante.isAtivo());
         
         restauranteRepository.save(restaurante);
         return modelMapper.map(restaurante, RestauranteResponseDTO.class);
@@ -91,18 +87,25 @@ public class RestauranteServiceImpl implements RestauranteService {
                 .collect(Collectors.toList());
     }
 
-    // Métodos abaixo são exemplos e precisam de lógica real
     @Override
     public BigDecimal calcularTaxaEntrega(Long id, String cep) {
         restauranteRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado com ID: " + id));
-        // TODO: Implementar lógica de cálculo de frete (ex: consultar API externa)
-        return new BigDecimal("10.00"); // Valor de exemplo
+                .orElseThrow(() -> new EntityNotFoundException("Restaurante", id));
+        // TODO: Implementar lógica de cálculo de frete
+        return new BigDecimal("10.00");
     }
     
     @Override
     public List<RestauranteResponseDTO> buscarRestaurantesProximos(String cep, Integer raio) {
-        // TODO: Implementar lógica de busca por proximidade (geolocalização)
-        return List.of(); // Retorna lista vazia como exemplo
+        // TODO: Implementar lógica de busca por proximidade
+        return List.of();
+    }
+
+    @Override
+    public void deletarRestaurante(Long id) {
+        if (!restauranteRepository.existsById(id)) {
+            throw new EntityNotFoundException("Restaurante", id);
+        }
+        restauranteRepository.deleteById(id);
     }
 }

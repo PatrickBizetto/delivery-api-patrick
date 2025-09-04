@@ -24,4 +24,6 @@ public interface RestauranteService {
     BigDecimal calcularTaxaEntrega(Long id, String cep);
 
     List<RestauranteResponseDTO> buscarRestaurantesProximos(String cep, Integer raio);
+
+    void deletarRestaurante(Long id);
 }

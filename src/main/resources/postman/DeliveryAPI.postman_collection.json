@@ -1,0 +1,43 @@
+{
+	"info": {
+		"_postman_id": "e17f1aad-8076-4866-8bf0-ef57314196b1",
+		"name": "DeliveryAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48158524",
+		"_collection_link": "https://mafagafo32-8830253.postman.co/workspace/Patrick-Cruz's-Workspace~ece233b6-719f-459a-8664-5c535af66656/collection/48158524-e17f1aad-8076-4866-8bf0-ef57314196b1?action=share&source=collection_link&creator=48158524"
+	},
+	"item": [
+		{
+			"name": "POST Produto com preço negativo (400)",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "GET Restaurante inexistente (404)",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "POST Pedido sem itens (400)",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "POST Restaurante com telefone inválido (400)",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}

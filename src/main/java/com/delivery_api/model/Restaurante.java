@@ -20,7 +20,10 @@ public class Restaurante {
     private String nome;
     private String categoria;
     private String endereco;
+    
+    @Column(unique = true)
     private String telefone;
+
     private BigDecimal taxaEntrega;
     private boolean ativo;
 

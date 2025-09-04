@@ -8,41 +8,41 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
-import java.math.BigDecimal;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/restaurantes")
 @CrossOrigin(origins = "*")
 @Tag(name = "Restaurantes", description = "Operações relacionadas aos restaurantes")
+@Validated // Habilita a validação para parâmetros de métodos, como @Positive no @PathVariable
 public class RestauranteController {
 
     @Autowired
     private RestauranteService restauranteService;
     
+    // A injeção do ProdutoService deve ficar aqui, apenas uma vez.
     @Autowired
     private ProdutoService produtoService;
 
-
     @PostMapping
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do restaurante a ser criado") 
-    @Operation(summary = "Cadastrar restaurante",
-            description = "Cria um novo restaurante no sistema")
+    @Operation(summary = "Cadastrar restaurante")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Restaurante criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "409", description = "Restaurante já existe")
     })
     public ResponseEntity<ApiResponseWrapper<RestauranteResponseDTO>> cadastrar(
-            @Valid @RequestBody
-            RestauranteDTO dto) {
+            @Valid @RequestBody RestauranteDTO dto) {
         RestauranteResponseDTO restaurante = restauranteService.cadastrarRestaurante(dto);
         ApiResponseWrapper<RestauranteResponseDTO> response =
                 new ApiResponseWrapper<>(true, restaurante, "Restaurante criado com sucesso");
@@ -50,17 +50,10 @@ public class RestauranteController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar restaurantes",
-            description = "Lista restaurantes com filtros opcionais e paginação")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso")
-    })
+    @Operation(summary = "Listar restaurantes")
     public ResponseEntity<PagedResponseWrapper<RestauranteResponseDTO>> listar(
-            @Parameter(description = "Categoria do restaurante")
             @RequestParam(required = false) String categoria,
-            @Parameter(description = "Status ativo do restaurante")
             @RequestParam(required = false) Boolean ativo,
-            @Parameter(description = "Parâmetros de paginação")
             Pageable pageable) {
         Page<RestauranteResponseDTO> restaurantes =
                 restauranteService.listarRestaurantes(categoria, ativo, pageable);
@@ -70,15 +63,14 @@ public class RestauranteController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar restaurante por ID",
-            description = "Recupera um restaurante específico pelo ID")
+    @Operation(summary = "Buscar restaurante por ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Restaurante encontrado"),
             @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")
     })
     public ResponseEntity<ApiResponseWrapper<RestauranteResponseDTO>> buscarPorId(
-            @Parameter(description = "ID do restaurante")
-            @PathVariable Long id) {
+            @Parameter(description = "ID do restaurante a ser buscado")
+            @PathVariable @Positive(message = "O ID deve ser um número positivo") Long id) {
         RestauranteResponseDTO restaurante = restauranteService.buscarRestaurantePorId(id);
         ApiResponseWrapper<RestauranteResponseDTO> response =
                 new ApiResponseWrapper<>(true, restaurante, "Restaurante encontrado");
@@ -86,102 +78,56 @@ public class RestauranteController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar restaurante",
-            description = "Atualiza os dados de um restaurante existente")
+    @Operation(summary = "Atualizar restaurante")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Restaurante atualizado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Restaurante não encontrado"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
     public ResponseEntity<ApiResponseWrapper<RestauranteResponseDTO>> atualizar(
-            @Parameter(description = "ID do restaurante")
-            @PathVariable Long id,
+            @Parameter(description = "ID do restaurante a ser atualizado")
+            @PathVariable @Positive(message = "O ID deve ser um número positivo") Long id,
             @Valid @RequestBody RestauranteDTO dto) {
         RestauranteResponseDTO restaurante = restauranteService.atualizarRestaurante(id, dto);
         ApiResponseWrapper<RestauranteResponseDTO> response =
                 new ApiResponseWrapper<>(true, restaurante, "Restaurante atualizado com sucesso");
         return ResponseEntity.ok(response);
     }
-
-    @PatchMapping("/{id}/status")
-    @Operation(summary = "Ativar/Desativar restaurante",
-            description = "Alterna o status ativo/inativo do restaurante")
+    
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deletar restaurante")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Status alterado com sucesso"),
+            @ApiResponse(responseCode = "204", description = "Restaurante deletado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")
     })
+    public ResponseEntity<Void> deletar(
+            @Parameter(description = "ID do restaurante a ser deletado")
+            @PathVariable @Positive(message = "O ID deve ser um número positivo") Long id) {
+        restauranteService.deletarRestaurante(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --- Outros Endpoints ---
+    
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Ativar/Desativar restaurante")
     public ResponseEntity<ApiResponseWrapper<RestauranteResponseDTO>> alterarStatus(
-            @Parameter(description = "ID do restaurante")
-            @PathVariable Long id) {
+            @PathVariable @Positive(message = "O ID deve ser um número positivo") Long id) {
         RestauranteResponseDTO restaurante = restauranteService.alterarStatusRestaurante(id);
         ApiResponseWrapper<RestauranteResponseDTO> response =
                 new ApiResponseWrapper<>(true, restaurante, "Status alterado com sucesso");
         return ResponseEntity.ok(response);
     }
-
-    @GetMapping("/categoria/{categoria}")
-    @Operation(summary = "Buscar por categoria",
-            description = "Lista restaurantes de uma categoria específica")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Restaurantes encontrados")
-    })
-    public ResponseEntity<ApiResponseWrapper<List<RestauranteResponseDTO>>> buscarPorCategoria(
-            @Parameter(description = "Categoria do restaurante")
-            @PathVariable String categoria) {
-        List<RestauranteResponseDTO> restaurantes =
-                restauranteService.buscarRestaurantesPorCategoria(categoria);
-        ApiResponseWrapper<List<RestauranteResponseDTO>> response =
-                new ApiResponseWrapper<>(true, restaurantes, "Restaurantes encontrados");
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/{id}/taxa-entrega/{cep}")
-    @Operation(summary = "Calcular taxa de entrega",
-            description = "Calcula a taxa de entrega para um CEP específico")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Taxa calculada com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")
-    })
-    public ResponseEntity<ApiResponseWrapper<BigDecimal>> calcularTaxaEntrega(
-            @Parameter(description = "ID do restaurante")
-            @PathVariable Long id,
-            @Parameter(description = "CEP de destino")
-            @PathVariable String cep) {
-        BigDecimal taxa = restauranteService.calcularTaxaEntrega(id, cep);
-        ApiResponseWrapper<BigDecimal> response =
-                new ApiResponseWrapper<>(true, taxa, "Taxa calculada com sucesso");
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/proximos/{cep}")
-    @Operation(summary = "Restaurantes próximos",
-            description = "Lista restaurantes próximos a um CEP")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Restaurantes próximos encontrados")
-    })
-    public ResponseEntity<ApiResponseWrapper<List<RestauranteResponseDTO>>> buscarProximos(
-            @Parameter(description = "CEP de referência")
-            @PathVariable String cep,
-            @Parameter(description = "Raio em km")
-            @RequestParam(defaultValue = "10") Integer raio) {
-        List<RestauranteResponseDTO> restaurantes =
-                restauranteService.buscarRestaurantesProximos(cep, raio);
-        ApiResponseWrapper<List<RestauranteResponseDTO>> response =
-                new ApiResponseWrapper<>(true, restaurantes, "Restaurantes próximos encontrados");
-        return ResponseEntity.ok(response);
-    }
-
+    
+    // O método de buscar produtos deve existir apenas uma vez.
     @GetMapping("/{restauranteId}/produtos")
-    @Operation(summary = "Produtos do restaurante",
-            description = "Lista todos os produtos de um restaurante")
+    @Operation(summary = "Listar produtos de um restaurante")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Produtos encontrados"),
             @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")
     })
     public ResponseEntity<ApiResponseWrapper<List<ProdutoResponseDTO>>> buscarProdutosDoRestaurante(
-            @Parameter(description = "ID do restaurante")
-            @PathVariable Long restauranteId,
-            @Parameter(description = "Filtrar apenas disponíveis")
+            @PathVariable @Positive(message = "O ID do restaurante deve ser um número positivo") Long restauranteId,
             @RequestParam(required = false) Boolean disponivel) {
         List<ProdutoResponseDTO> produtos =
                 produtoService.buscarProdutosPorRestaurante(restauranteId, disponivel);
