@@ -4,40 +4,650 @@
 		"name": "DeliveryAPI",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "48158524",
-		"_collection_link": "https://mafagafo32-8830253.postman.co/workspace/Patrick-Cruz's-Workspace~ece233b6-719f-459a-8664-5c535af66656/collection/48158524-e17f1aad-8076-4866-8bf0-ef57314196b1?action=share&source=collection_link&creator=48158524"
+		"_collection_link": "https://mafagafo32-8830253.postman.co/workspace/ece233b6-719f-459a-8664-5c535af66656/collection/48158524-e17f1aad-8076-4866-8bf0-ef57314196b1?action=share&source=collection_link&creator=48158524"
 	},
 	"item": [
 		{
-			"name": "POST Produto com preço negativo (400)",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
+			"name": "Validações de Entrada",
+			"item": [
+				{
+					"name": "Restaurante com nome vazio (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nome\": \"\",\n    \"categoria\": \"BRASILEIRA\",\n    \"endereco\": \"Rua do Teste, 100\",\n    \"telefone\": \"11912340001\",\n    \"taxaEntrega\": 5.50,\n    \"tempoEntrega\": 35,\n    \"horarioFuncionamento\": \"11:00-22:00\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/restaurantes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"restaurantes"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				},
+				{
+					"name": "Produto com preço negativo (400)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"restauranteId\": 1,\r\n    \"nome\": \"Produto com Preço Inválido\",\r\n    \"descricao\": \"Este produto não pode ser cadastrado\",\r\n    \"preco\": -10.00,\r\n    \"categoria\": \"BEBIDA\",\r\n    \"disponivel\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/produtos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"produtos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Restaurante inexistente (404)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/restaurantes/9999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"restaurantes",
+								"9999"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pedido sem itens (400)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"clienteId\": 1,\r\n    \"restauranteId\": 1,\r\n    \"formaPagamento\": \"PIX\",\r\n    \"enderecoEntrega\": \"Avenida Principal, 456\",\r\n    \"observacao\": \"Teste de pedido sem itens\",\r\n    \"itens\": []\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/pedidos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pedidos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Restaurante com telefone inválido (400)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"nome\": \"Restaurante Telefone Inválido\",\r\n    \"categoria\": \"JAPONESA\",\r\n    \"endereco\": \"Travessa do Erro, 400\",\r\n    \"telefone\": \"12345\",\r\n    \"taxaEntrega\": 15.00,\r\n    \"tempoEntrega\": 60,\r\n    \"horarioFuncionamento\": \"19:00-23:00\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/restaurantes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"restaurantes"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		},
 		{
-			"name": "GET Restaurante inexistente (404)",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
+			"name": "Segurança",
+			"item": [
+				{
+					"name": "Autenticação",
+					"item": [
+						{
+							"name": "Registrar Novo Usuário (Cliente)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"nome\": \"Carla Nova\",\r\n    \"email\": \"carla.nova@email.com\",\r\n    \"senha\": \"123456\",\r\n    \"role\": \"CLIENTE\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"register"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Login como ADMIN",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Este script pega o token da resposta JSON e salva em uma variável de ambiente\r",
+											"// chamada \"token_admin\"\r",
+											"let jsonData = pm.response.json();\r",
+											"if (jsonData && jsonData.token) {\r",
+											"    pm.environment.set(\"token_admin\", jsonData.token);\r",
+											"    console.log(\"Token de ADMIN salvo!\");\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"admin@delivery.com\",\r\n    \"senha\": \"123456\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Login como CLIENTE",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Este script pega o token da resposta JSON e salva em uma variável de ambiente\r",
+											"// chamada \"token_cliente\"\r",
+											"let jsonData = pm.response.json();\r",
+											"if (jsonData && jsonData.token) {\r",
+											"    pm.environment.set(\"token_cliente\", jsonData.token);\r",
+											"    console.log(\"Token de CLIENTE salvo!\");\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"carla.nova@email.com\",\r\n    \"senha\": \"123456\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Login como RESTAURANTE (Dono)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Este script pega o token da resposta JSON e salva em uma variável de ambiente\r",
+											"// chamada \"token_restaurante\"\r",
+											"let jsonData = pm.response.json();\r",
+											"if (jsonData && jsonData.token) {\r",
+											"    pm.environment.set(\"token_restaurante\", jsonData.token);\r",
+											"    console.log(\"Token de RESTAURANTE salvo!\");\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"dono.cantina@delivery.com\",\r\n    \"senha\": \"123456\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Buscar Dados do Usuário Logado (/me)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_cliente}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"me"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Teste de Autorização",
+					"item": [
+						{
+							"name": "[401] Acessar /me SEM Token",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_cliente}}",
+										"type": "text",
+										"disabled": true
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer abc123",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"me"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[403] Cliente tentando criar Produto",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_cliente}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"nome\": \"Produto Proibido\",\r\n    \"descricao\": \"Tentativa de cadastro por cliente\",\r\n    \"preco\": 5.00,\r\n    \"categoria\": \"TESTE\",\r\n    \"restauranteId\": 1\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/produtos",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"produtos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[403] Restaurante 1 tentando editar Produto do Restaurante 2",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_restaurante2}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"nome\": \"Pizza Calabresa Super Atualizada\",\r\n    \"descricao\": \"Agora com borda recheada!\",\r\n    \"preco\": 58.00,\r\n    \"categoria\": \"Pizza\", \r\n    \"restauranteId\": 1\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/produtos/2",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"produtos",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[403] Cliente tentando listar TODOS os Pedidos",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/pedidos",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"pedidos"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Acesso Público",
+					"item": [
+						{
+							"name": "Listar Restaurantes (Público)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/restaurantes",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"restaurantes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Listar Produtos (Público)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/produtos",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"produtos"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Ações de Administrador",
+					"item": [
+						{
+							"name": "[ADMIN] Criar Novo Restaurante",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"nome\": \"Restaurante do Admin\",\r\n    \"telefone\": \"11987654321\",\r\n    \"taxaEntrega\": 7.50,\r\n    \"categoria\": \"VARIEDADES\",\r\n    \"endereco\": {\r\n        \"cep\": \"16015-000\",\r\n        \"logradouro\": \"Rua do Admin\",\r\n        \"numero\": \"123\",\r\n        \"bairro\": \"Centro\",\r\n        \"cidade\": \"AdminCity\",\r\n        \"uf\": \"SP\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/restaurantes",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"restaurantes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[ADMIN] Deletar Restaurante",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/restaurantes/3",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"restaurantes",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[ADMIN] Listar TODOS os Pedidos",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/pedidos",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"pedidos"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
 		},
 		{
-			"name": "POST Pedido sem itens (400)",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
-		},
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
 		{
-			"name": "POST Restaurante com telefone inválido (400)",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
+			"key": "baseUrl",
+			"value": ""
 		}
 	]
 }

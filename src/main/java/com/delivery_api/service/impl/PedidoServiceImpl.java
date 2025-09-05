@@ -16,6 +16,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -220,5 +222,46 @@ public class PedidoServiceImpl implements PedidoService {
 
     private boolean podeSerCancelado(StatusPedido status) {
         return status == StatusPedido.PENDENTE || status == StatusPedido.CONFIRMADO;
+    }
+
+    private Usuario getUsuarioLogado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario)) {
+            return null;
+        }
+        return (Usuario) authentication.getPrincipal();
+    }
+
+    public boolean canAccess(Long pedidoId) {
+        Usuario usuarioLogado = getUsuarioLogado();
+        if (usuarioLogado == null) return false;
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado"));
+        
+        boolean isClientOwner = pedido.getCliente().getId().equals(usuarioLogado.getId());
+        boolean isRestaurantOwner = pedido.getRestaurante().getId().equals(usuarioLogado.getRestauranteId());
+
+        return isClientOwner || isRestaurantOwner;
+    }
+
+    public boolean isClientOwner(Long pedidoId) {
+        Usuario usuarioLogado = getUsuarioLogado();
+        if (usuarioLogado == null) return false;
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado"));
+
+        return pedido.getCliente().getId().equals(usuarioLogado.getId());
+    }
+
+    public boolean isRestaurantOwner(Long pedidoId) {
+        Usuario usuarioLogado = getUsuarioLogado();
+        if (usuarioLogado == null || usuarioLogado.getRestauranteId() == null) return false;
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado"));
+
+        return pedido.getRestaurante().getId().equals(usuarioLogado.getRestauranteId());
     }
 }

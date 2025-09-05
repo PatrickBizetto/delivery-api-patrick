@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // <-- ADICIONE ESTE IMPORT
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,21 +25,23 @@ import java.util.List;
 @RequestMapping("/api/restaurantes")
 @CrossOrigin(origins = "*")
 @Tag(name = "Restaurantes", description = "Operações relacionadas aos restaurantes")
-@Validated // Habilita a validação para parâmetros de métodos, como @Positive no @PathVariable
+@Validated
 public class RestauranteController {
 
     @Autowired
     private RestauranteService restauranteService;
     
-    // A injeção do ProdutoService deve ficar aqui, apenas uma vez.
     @Autowired
     private ProdutoService produtoService;
 
+    // REGRA: Apenas usuários com perfil ADMIN podem cadastrar restaurantes.
     @PostMapping
-    @Operation(summary = "Cadastrar restaurante")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Cadastrar restaurante (Admin)")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Restaurante criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
             @ApiResponse(responseCode = "409", description = "Restaurante já existe")
     })
     public ResponseEntity<ApiResponseWrapper<RestauranteResponseDTO>> cadastrar(
@@ -49,8 +52,9 @@ public class RestauranteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    // REGRA: Endpoint público. Acesso liberado para todos no SecurityConfig.
     @GetMapping
-    @Operation(summary = "Listar restaurantes")
+    @Operation(summary = "Listar restaurantes (Público)")
     public ResponseEntity<PagedResponseWrapper<RestauranteResponseDTO>> listar(
             @RequestParam(required = false) String categoria,
             @RequestParam(required = false) Boolean ativo,
@@ -61,9 +65,10 @@ public class RestauranteController {
                 new PagedResponseWrapper<>(restaurantes);
         return ResponseEntity.ok(response);
     }
-
+    
+    // REGRA: Endpoint público. Acesso liberado para todos no SecurityConfig.
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar restaurante por ID")
+    @Operation(summary = "Buscar restaurante por ID (Público)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Restaurante encontrado"),
             @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")
@@ -77,12 +82,14 @@ public class RestauranteController {
         return ResponseEntity.ok(response);
     }
 
+    // REGRA: Apenas ADMIN ou o DONO do restaurante pode atualizar.
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar restaurante")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('RESTAURANTE') and @restauranteServiceImpl.isOwner(#id))")
+    @Operation(summary = "Atualizar restaurante (Admin ou Dono)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Restaurante atualizado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Restaurante não encontrado"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos")
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
+            @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")
     })
     public ResponseEntity<ApiResponseWrapper<RestauranteResponseDTO>> atualizar(
             @Parameter(description = "ID do restaurante a ser atualizado")
@@ -94,10 +101,13 @@ public class RestauranteController {
         return ResponseEntity.ok(response);
     }
     
+    // REGRA: Apenas ADMIN pode deletar um restaurante.
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar restaurante")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Deletar restaurante (Admin)")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Restaurante deletado com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
             @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")
     })
     public ResponseEntity<Void> deletar(
@@ -109,8 +119,10 @@ public class RestauranteController {
 
     // --- Outros Endpoints ---
     
+    // REGRA: Apenas ADMIN ou o DONO do restaurante pode alterar o status.
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Ativar/Desativar restaurante")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('RESTAURANTE') and @restauranteServiceImpl.isOwner(#id))")
+    @Operation(summary = "Ativar/Desativar restaurante (Admin ou Dono)")
     public ResponseEntity<ApiResponseWrapper<RestauranteResponseDTO>> alterarStatus(
             @PathVariable @Positive(message = "O ID deve ser um número positivo") Long id) {
         RestauranteResponseDTO restaurante = restauranteService.alterarStatusRestaurante(id);
@@ -119,9 +131,9 @@ public class RestauranteController {
         return ResponseEntity.ok(response);
     }
     
-    // O método de buscar produtos deve existir apenas uma vez.
+    // REGRA: Endpoint público para ver o cardápio de um restaurante.
     @GetMapping("/{restauranteId}/produtos")
-    @Operation(summary = "Listar produtos de um restaurante")
+    @Operation(summary = "Listar produtos de um restaurante (Público)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Produtos encontrados"),
             @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")

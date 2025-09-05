@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // <-- ADICIONE ESTE IMPORT
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
@@ -28,15 +29,15 @@ public class PedidoController {
     @Autowired
     private PedidoService pedidoService;
 
+    // REGRA: Apenas usuários com perfil CLIENTE podem criar um novo pedido.
     @PostMapping
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do pedido a ser criado") 
-    @Operation(summary = "Criar pedido",
+    @PreAuthorize("hasRole('CLIENTE')")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do pedido a ser criado")
+    @Operation(summary = "Criar pedido (Cliente)",
             description = "Cria um novo pedido no sistema")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Pedido criado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "404", description = "Cliente ou restaurante não encontrado"),
-            @ApiResponse(responseCode = "409", description = "Produto indisponível")
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<ApiResponseWrapper<PedidoResponseDTO>> criarPedido(
             @Valid @RequestBody
@@ -47,11 +48,14 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    // REGRA: Apenas ADMIN ou o CLIENTE/RESTAURANTE donos do pedido podem vê-lo.
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar pedido por ID",
+    @PreAuthorize("hasRole('ADMIN') or @pedidoServiceImpl.canAccess(#id)")
+    @Operation(summary = "Buscar pedido por ID (Admin ou Dono do Pedido)",
             description = "Recupera um pedido específico com todos os detalhes")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pedido encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado"),
             @ApiResponse(responseCode = "404", description = "Pedido não encontrado")
     })
     public ResponseEntity<ApiResponseWrapper<PedidoResponseDTO>> buscarPorId(
@@ -63,11 +67,14 @@ public class PedidoController {
         return ResponseEntity.ok(response);
     }
 
+    // REGRA: Apenas ADMIN pode listar TODOS os pedidos do sistema.
     @GetMapping
-    @Operation(summary = "Listar pedidos",
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Listar todos os pedidos (Admin)",
             description = "Lista pedidos com filtros opcionais e paginação")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso")
+            @ApiResponse(responseCode = "200", description = "Lista recuperada com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<PagedResponseWrapper<PedidoResponseDTO>> listar(
             @Parameter(description = "Status do pedido")
@@ -87,13 +94,14 @@ public class PedidoController {
         return ResponseEntity.ok(response);
     }
 
+    // REGRA: Apenas ADMIN ou o RESTAURANTE dono do pedido pode atualizar o status.
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Atualizar status do pedido",
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('RESTAURANTE') and @pedidoServiceImpl.isRestaurantOwner(#id))")
+    @Operation(summary = "Atualizar status do pedido (Admin ou Restaurante)",
             description = "Atualiza o status de um pedido")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Status atualizado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Pedido não encontrado"),
-            @ApiResponse(responseCode = "400", description = "Transição de status inválida")
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<ApiResponseWrapper<PedidoResponseDTO>> atualizarStatus(
             @Parameter(description = "ID do pedido")
@@ -106,13 +114,14 @@ public class PedidoController {
         return ResponseEntity.ok(response);
     }
 
+    // REGRA: Apenas ADMIN ou o CLIENTE dono do pedido pode cancelar.
     @DeleteMapping("/{id}")
-    @Operation(summary = "Cancelar pedido",
+    @PreAuthorize("hasRole('ADMIN') or @pedidoServiceImpl.isClientOwner(#id)")
+    @Operation(summary = "Cancelar pedido (Admin ou Cliente)",
             description = "Cancela um pedido se possível")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Pedido cancelado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Pedido não encontrado"),
-            @ApiResponse(responseCode = "400", description = "Pedido não pode ser cancelado")
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<Void> cancelarPedido(
             @Parameter(description = "ID do pedido")
@@ -121,12 +130,15 @@ public class PedidoController {
         return ResponseEntity.noContent().build();
     }
 
+    // REGRA: Apenas ADMIN ou o próprio CLIENTE pode ver seu histórico.
+    // A expressão SpEL '#clienteId == principal.id' compara o ID da URL com o ID do usuário logado.
     @GetMapping("/cliente/{clienteId}")
-    @Operation(summary = "Histórico do cliente",
+    @PreAuthorize("hasRole('ADMIN') or #clienteId == principal.id")
+    @Operation(summary = "Histórico do cliente (Admin ou Próprio Cliente)",
             description = "Lista todos os pedidos de um cliente")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Histórico recuperado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Cliente não encontrado")
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<ApiResponseWrapper<List<PedidoResponseDTO>>> buscarPorCliente(
             @Parameter(description = "ID do cliente")
@@ -137,12 +149,15 @@ public class PedidoController {
         return ResponseEntity.ok(response);
     }
 
+    // REGRA: Apenas ADMIN ou o próprio RESTAURANTE pode ver seus pedidos.
+    // A expressão SpEL '#restauranteId == principal.restauranteId' compara o ID da URL com o ID do restaurante do usuário logado.
     @GetMapping("/restaurante/{restauranteId}")
-    @Operation(summary = "Pedidos do restaurante",
+    @PreAuthorize("hasRole('ADMIN') or #restauranteId == principal.restauranteId")
+    @Operation(summary = "Pedidos do restaurante (Admin ou Próprio Restaurante)",
             description = "Lista todos os pedidos de um restaurante")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pedidos recuperados com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Restaurante não encontrado")
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<ApiResponseWrapper<List<PedidoResponseDTO>>> buscarPorRestaurante(
             @Parameter(description = "ID do restaurante")
@@ -156,15 +171,12 @@ public class PedidoController {
         return ResponseEntity.ok(response);
     }
 
+    // REGRA: Endpoint utilitário para clientes logados calcularem o valor de um carrinho.
     @PostMapping("/calcular")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Itens para cálculo") 
-    @Operation(summary = "Calcular total do pedido",
+    @PreAuthorize("isAuthenticated()")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Itens para cálculo")
+    @Operation(summary = "Calcular total do pedido (Autenticado)",
             description = "Calcula o total de um pedido sem salvá-lo")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Total calculado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "404", description = "Produto não encontrado")
-    })
     public ResponseEntity<ApiResponseWrapper<CalculoPedidoResponseDTO>> calcularTotal(
             @Valid @RequestBody
             CalculoPedidoDTO dto) {

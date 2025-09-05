@@ -4,6 +4,7 @@ import com.delivery_api.dto.RestauranteDTO;
 import com.delivery_api.dto.RestauranteResponseDTO;
 import com.delivery_api.exception.ConflictException;
 import com.delivery_api.model.Restaurante;
+import com.delivery_api.model.Usuario;
 import com.delivery_api.repository.RestauranteRepository;
 import com.delivery_api.service.RestauranteService;
 import com.delivery_api.exception.EntityNotFoundException; 
@@ -11,6 +12,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +54,6 @@ public class RestauranteServiceImpl implements RestauranteService {
     @Transactional(readOnly = true)
     public RestauranteResponseDTO buscarRestaurantePorId(Long id) {
         Restaurante restaurante = restauranteRepository.findById(id)
-                // <<-- CORREÇÃO 2: AGORA ESTA LINHA USA A EXCEÇÃO CORRETA
                 .orElseThrow(() -> new EntityNotFoundException("Restaurante", id)); 
         return modelMapper.map(restaurante, RestauranteResponseDTO.class);
     }
@@ -107,5 +109,24 @@ public class RestauranteServiceImpl implements RestauranteService {
             throw new EntityNotFoundException("Restaurante", id);
         }
         restauranteRepository.deleteById(id);
+    }
+    
+    // MÉTODO DE VERIFICAÇÃO DE SEGURANÇA
+    // Não tem @Override porque é um método de implementação interna, não parte do contrato público.
+    public boolean isOwner(Long restauranteId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof Usuario) {
+            Usuario usuarioLogado = (Usuario) principal;
+            
+            // Verifica se o usuário é do tipo RESTAURANTE e se o restauranteId dele é igual ao do parâmetro
+            return usuarioLogado.getRestauranteId() != null && usuarioLogado.getRestauranteId().equals(restauranteId);
+        }
+
+        return false;
     }
 }

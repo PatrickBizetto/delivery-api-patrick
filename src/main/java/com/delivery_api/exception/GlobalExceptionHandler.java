@@ -2,7 +2,10 @@ package com.delivery_api.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,10 +17,6 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Captura erros de validação (@Valid) e formata a resposta
-     * com detalhes de cada campo que falhou.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex, WebRequest request) {
@@ -41,9 +40,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Captura a exceção quando uma entidade não é encontrada no banco de dados.
-     */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(
             EntityNotFoundException ex, WebRequest request) {
@@ -59,9 +55,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    /**
-     * Captura exceções de conflito, como tentar criar um recurso que já existe.
-     */
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflictException(
             ConflictException ex, WebRequest request) {
@@ -83,16 +76,49 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
-    /**
-     * Captura todas as outras exceções não tratadas para evitar que a aplicação quebre.
-     * Retorna uma mensagem genérica de erro 500.
-     */
+    // Add this new exception handler for method not supported
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupportedException(
+            HttpRequestMethodNotSupportedException ex, WebRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.METHOD_NOT_ALLOWED.value(),
+                "Method Not Allowed",
+                "Método HTTP não suportado para este endpoint",
+                request.getDescription(false).replace("uri=", "")
+        );
+        errorResponse.setErrorCode("METHOD_NOT_ALLOWED");
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                "Credenciais inválidas. Por favor, verifique seu e-mail e senha.",
+                request.getDescription(false).replace("uri=", "")
+        );
+        errorResponse.setErrorCode("INVALID_CREDENTIALS");
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "Acesso negado. Você não tem permissão para acessar este recurso.",
+                request.getDescription(false).replace("uri=", "")
+        );
+        errorResponse.setErrorCode("ACCESS_DENIED");
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, WebRequest request) {
-
-        // Logar a exceção real no servidor é uma boa prática aqui
-        // ex.printStackTrace();
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

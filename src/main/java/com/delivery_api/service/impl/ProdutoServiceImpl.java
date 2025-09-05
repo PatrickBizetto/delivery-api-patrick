@@ -5,11 +5,14 @@ import com.delivery_api.dto.ProdutoResponseDTO;
 import com.delivery_api.exception.EntityNotFoundException;
 import com.delivery_api.model.Produto;
 import com.delivery_api.model.Restaurante;
+import com.delivery_api.model.Usuario;
 import com.delivery_api.repository.ProdutoRepository;
 import com.delivery_api.repository.RestauranteRepository;
 import com.delivery_api.service.ProdutoService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -25,6 +28,7 @@ public class ProdutoServiceImpl implements ProdutoService {
     private RestauranteRepository restauranteRepository;
     @Autowired
     private ModelMapper modelMapper;
+    
 
     @Override
     public ProdutoResponseDTO cadastrarProduto(ProdutoDTO dto) {
@@ -51,11 +55,15 @@ public class ProdutoServiceImpl implements ProdutoService {
     public ProdutoResponseDTO atualizarProduto(Long id, ProdutoDTO dto) {
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado: " + id));
+
+        // Atualiza apenas os campos permitidos, manualmente.
+        produto.setNome(dto.getNome());
+        produto.setDescricao(dto.getDescricao());
+        produto.setPreco(dto.getPreco());
+        produto.setCategoria(dto.getCategoria());
         
-        // Garante que o restaurante não seja alterado na atualização do produto
-        dto.setRestauranteId(null); 
-        modelMapper.map(dto, produto);
-        
+        // O campo 'disponivel' é atualizado em outro método, e o 'restaurante' nunca deve mudar.
+
         Produto produtoAtualizado = produtoRepository.save(produto);
         return modelMapper.map(produtoAtualizado, ProdutoResponseDTO.class);
     }
@@ -76,6 +84,16 @@ public class ProdutoServiceImpl implements ProdutoService {
         produto.setDisponivel(!produto.isDisponivel()); // Inverte o status
         produtoRepository.save(produto);
         return modelMapper.map(produto, ProdutoResponseDTO.class);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProdutoResponseDTO> listarTodosProdutos() {
+        // This should return all products from all restaurants
+        List<Produto> produtos = produtoRepository.findAll();
+        return produtos.stream()
+                .map(produto -> modelMapper.map(produto, ProdutoResponseDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -108,5 +126,29 @@ public class ProdutoServiceImpl implements ProdutoService {
         return produtos.stream()
                 .map(produto -> modelMapper.map(produto, ProdutoResponseDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    public boolean isOwner(Long produtoId) {
+        // 1. Obtém o usuário autenticado da sessão.
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario)) {
+            return false;
+        }
+        Usuario usuarioLogado = (Usuario) authentication.getPrincipal();
+
+        // 2. Se o usuário não for de um restaurante, ele não pode ser dono de um produto.
+        if (usuarioLogado.getRestauranteId() == null) {
+            return false;
+        }
+
+        // 3. Busca o produto no banco de dados para encontrar a qual restaurante ele pertence.
+        Produto produto = produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new EntityNotFoundException("Produto com ID " + produtoId + " não encontrado."));
+
+        // 4. Compara o ID do restaurante do usuário logado com o ID do restaurante do produto.
+        Long restauranteIdDoUsuario = usuarioLogado.getRestauranteId();
+        Long restauranteIdDoProduto = produto.getRestaurante().getId();
+
+        return restauranteIdDoUsuario.equals(restauranteIdDoProduto);
     }
 }

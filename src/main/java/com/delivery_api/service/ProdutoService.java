@@ -16,6 +16,8 @@ public interface ProdutoService {
 
     ProdutoResponseDTO alterarDisponibilidade(Long id);
 
+    List<ProdutoResponseDTO> listarTodosProdutos();
+
     List<ProdutoResponseDTO> buscarProdutosPorCategoria(String categoria);
 
     List<ProdutoResponseDTO> buscarProdutosPorNome(String nome);
