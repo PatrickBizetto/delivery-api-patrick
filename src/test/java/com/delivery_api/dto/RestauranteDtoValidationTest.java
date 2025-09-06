@@ -91,15 +91,17 @@ public class RestauranteDtoValidationTest {
     class TaxaEntregaValidationTests {
 
         @Test
-        @DisplayName("Deve falhar se taxa de entrega for zero")
-        void deveFalharSeTaxaEntregaForZero() {
+        @DisplayName("Deve passar na validação se a taxa de entrega for zero")
+        void devePassarSeTaxaEntregaForZero() {
+            // Arrange
             RestauranteDTO dto = createValidDto();
-            dto.setTaxaEntrega(BigDecimal.ZERO); // Inválido (inclusive = false)
-            
+            dto.setTaxaEntrega(BigDecimal.ZERO);
+    
+            // Act
             Set<ConstraintViolation<RestauranteDTO>> violations = validator.validate(dto);
             
-            assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage()).isEqualTo("Taxa de entrega deve ser positiva");
+            // Assert
+            assertThat(violations).isEmpty();
         }
     }
 

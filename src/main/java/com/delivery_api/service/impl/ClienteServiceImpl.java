@@ -4,6 +4,7 @@ import com.delivery_api.dto.ClienteDTO;
 import com.delivery_api.dto.ClienteResponseDTO;
 import com.delivery_api.model.Cliente;
 import com.delivery_api.exception.BusinessException;
+import com.delivery_api.exception.ConflictException;
 import com.delivery_api.exception.EntityNotFoundException;
 import com.delivery_api.repository.ClienteRepository;
 import com.delivery_api.service.ClienteService;
@@ -24,22 +25,20 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private ModelMapper modelMapper;
 
-    @Override
+   @Override
+    @Transactional
     public ClienteResponseDTO cadastrarCliente(ClienteDTO dto) {
-        // Validar email único
-        if (clienteRepository.existsByEmail(dto.getEmail())) {
-            throw new BusinessException("Email já cadastrado: " + dto.getEmail());
+        // 1. VERIFICA PRIMEIRO
+        if (clienteRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new ConflictException("Já existe um cliente cadastrado com o e-mail: " + dto.getEmail());
         }
 
-        // Converter DTO para entidade
+        // 2. SÓ CONTINUA SE A VERIFICAÇÃO PASSAR
         Cliente cliente = modelMapper.map(dto, Cliente.class);
         cliente.setAtivo(true);
+        Cliente novoCliente = clienteRepository.save(cliente);
 
-        // Salvar cliente
-        Cliente clienteSalvo = clienteRepository.save(cliente);
-
-        // Retornar DTO de resposta
-        return modelMapper.map(clienteSalvo, ClienteResponseDTO.class);
+        return modelMapper.map(novoCliente, ClienteResponseDTO.class);
     }
 
     @Override
