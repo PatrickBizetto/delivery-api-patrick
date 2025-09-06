@@ -2,52 +2,41 @@ package com.delivery_api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.Getter;
+import lombok.Setter;
 import java.math.BigDecimal;
 
-@Schema(description = "Dados para cadastro ou atualização de um produto")
+@Getter
+@Setter
+@Schema(description = "DTO com os dados necessários para cadastrar ou atualizar um produto.")
 public class ProdutoDTO {
 
-    @Schema(description = "Nome do produto", example = "Pizza Margherita", required = true)
-    @NotBlank(message = "Nome é obrigatório")
-    @Size(min = 2, max = 100, message = "Nome deve ter entre 2 e 100 caracteres")
+    @NotBlank(message = "O nome do produto é obrigatório.")
+    @Size(min = 2, max = 100, message = "O nome deve ter entre 2 e 100 caracteres.")
+    @Schema(description = "Nome do produto.", example = "Pizza Margherita", requiredMode = Schema.RequiredMode.REQUIRED)
     private String nome;
 
-    @Schema(description = "Descrição detalhada do produto", example = "Molho de tomate fresco, mussarela de búfala e manjericão")
-    @NotBlank(message = "Descrição é obrigatória")
-    @Size(min = 10, max = 255, message = "Descrição deve ter entre 10 e 255 caracteres")
+    @NotBlank(message = "A descrição do produto é obrigatória.")
+    @Size(min = 10, max = 255, message = "A descrição deve ter entre 10 e 255 caracteres.")
+    @Schema(description = "Descrição detalhada do produto, incluindo ingredientes.", example = "Molho de tomate fresco, mussarela de búfala e manjericão.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String descricao;
 
-    @Schema(description = "Preço do produto", example = "45.50", required = true)
-    @NotNull(message = "Preço é obrigatório")
-    @DecimalMin(value = "0.01", message = "Preço deve ser maior que zero")
-    @DecimalMax(value = "500.00", message = "Preço não pode exceder R$ 500,00")
+    @NotNull(message = "O preço do produto é obrigatório.")
+    @DecimalMin(value = "0.01", message = "O preço deve ser maior que zero.")
+    @DecimalMax(value = "9999.99", message = "O preço máximo permitido é R$ 9999.99.")
+    @Schema(description = "Preço de venda do produto.", example = "45.50", requiredMode = Schema.RequiredMode.REQUIRED)
     private BigDecimal preco;
 
-    @Schema(description = "Categoria do produto", example = "Pizza Salgada", required = true)
-    @NotBlank(message = "Categoria é obrigatória")
+    @NotBlank(message = "A categoria do produto é obrigatória.")
+    @Schema(description = "Categoria para agrupar o produto (ex: PIZZA, BEBIDA, SOBREMESA).", example = "PIZZA", requiredMode = Schema.RequiredMode.REQUIRED)
     private String categoria;
 
-    @Schema(description = "ID do restaurante ao qual o produto pertence", example = "1", required = true)
-    @NotNull(message = "ID do restaurante é obrigatório")
-    @Positive(message = "ID do restaurante deve ser um número positivo")
+    @NotNull(message = "O ID do restaurante é obrigatório.")
+    @Positive(message = "O ID do restaurante deve ser um número positivo.")
+    @Schema(description = "ID do restaurante ao qual o produto pertence.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long restauranteId;
 
-    @Schema(description = "URL de uma imagem do produto (opcional)", example = "https://example.com/images/pizza.jpg")
-    @Pattern(regexp = "^(https?://).+\\.(jpg|jpeg|png|gif)$",
-             message = "URL da imagem deve ser válida e ter formato JPG, JPEG, PNG ou GIF")
+    @Pattern(regexp = "^(http|https)://.*\\.(jpg|jpeg|png|gif)$", message = "A URL da imagem deve ser válida e terminar com .jpg, .jpeg, .png ou .gif.")
+    @Schema(description = "URL de uma imagem do produto (opcional).", example = "https://i.imgur.com/3g4z6gN.jpg")
     private String imagemUrl;
-
-    // Getters e Setters
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
-    public BigDecimal getPreco() { return preco; }
-    public void setPreco(BigDecimal preco) { this.preco = preco; }
-    public String getCategoria() { return categoria; }
-    public void setCategoria(String categoria) { this.categoria = categoria; }
-    public Long getRestauranteId() { return restauranteId; }
-    public void setRestauranteId(Long restauranteId) { this.restauranteId = restauranteId; }
-    public String getImagemUrl() { return imagemUrl; }
-    public void setImagemUrl(String imagemUrl) { this.imagemUrl = imagemUrl; }
 }

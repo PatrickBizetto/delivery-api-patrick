@@ -45,16 +45,25 @@ public class SecurityConfig {
             .anonymous(anonymous -> anonymous.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
-            // 🔹 ADICIONAR A CONFIGURAÇÃO DE EXCEÇÕES AQUI
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
             )
             
             .authorizeHttpRequests(authorize -> authorize
+                // ✅ ADICIONE ESTES MATCHERS PARA LIBERAR O SWAGGER
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**"
+                ).permitAll()
+                
+                // Seus endpoints públicos existentes
                 .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/restaurantes/**", "/api/produtos/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                
+                // Todas as outras requisições precisam de autenticação
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

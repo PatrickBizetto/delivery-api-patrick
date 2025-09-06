@@ -1,6 +1,6 @@
 package com.delivery_api.enums;
 
-public enum Role {
+public enum UserRole {
     CLIENTE,
     RESTAURANTE,
     ADMIN,

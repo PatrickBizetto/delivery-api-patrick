@@ -7,7 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.delivery_api.enums.Role;
+import com.delivery_api.enums.UserRole;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -33,7 +33,7 @@ public class Usuario implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private UserRole role;
 
     private boolean ativo = true;
 

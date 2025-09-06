@@ -2,30 +2,27 @@ package com.delivery_api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.Getter;
+import lombok.Setter;
 
-@Schema(description = "Dados de um item específico dentro de um pedido")
+@Getter
+@Setter
+@Schema(description = "Representa um item individual dentro de um pedido, com seu produto e quantidade.")
 public class ItemPedidoDTO {
 
-    @Schema(description = "ID do produto a ser adicionado", example = "1", required = true)
-    @NotNull(message = "Produto ID é obrigatório")
-    @Positive(message = "Produto ID deve ser positivo")
+    @NotNull(message = "O ID do produto é obrigatório.")
+    @Positive(message = "O ID do produto deve ser um número positivo.")
+    @Schema(description = "ID do produto que está sendo pedido.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long produtoId;
 
-    @Schema(description = "Quantidade do produto", example = "2", required = true)
-    @NotNull(message = "Quantidade é obrigatória")
-    @Min(value = 1, message = "Quantidade deve ser pelo menos 1")
-    @Max(value = 50, message = "Quantidade não pode exceder 50 unidades")
+    @NotNull(message = "A quantidade é obrigatória.")
+    @Min(value = 1, message = "A quantidade mínima para um item é 1.")
+    @Max(value = 50, message = "A quantidade máxima para um item é 50.")
+    @Schema(description = "Quantidade de unidades do produto a ser pedido.", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer quantidade;
 
-    @Schema(description = "Observações específicas para este item (opcional)", example = "Sem picles")
-    @Size(max = 200, message = "Observações não podem exceder 200 caracteres")
+    @Size(max = 200, message = "As observações não podem exceder 200 caracteres.")
+    @Schema(description = "Observações opcionais para o item do pedido (ex: sem cebola, ponto da carne, etc).", example = "Capricha na batata frita!")
     private String observacoes;
 
-    // Getters e Setters
-    public Long getProdutoId() { return produtoId; }
-    public void setProdutoId(Long produtoId) { this.produtoId = produtoId; }
-    public Integer getQuantidade() { return quantidade; }
-    public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
-    public String getObservacoes() { return observacoes; }
-    public void setObservacoes(String observacoes) { this.observacoes = observacoes; }
 }

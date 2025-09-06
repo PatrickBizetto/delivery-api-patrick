@@ -1,21 +1,25 @@
 package com.delivery_api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
-@Schema(description = "Wrapper padrão para respostas da API")
+@Getter
+@Setter
+@Schema(description = "Wrapper padrão para as respostas da API, encapsulando os dados, status e uma mensagem.")
 public class ApiResponseWrapper<T> {
 
-    @Schema(description = "Indica se a operação foi bem-sucedida", example = "true")
+    @Schema(description = "Indica se a requisição foi processada com sucesso.", example = "true")
     private boolean success;
 
-    @Schema(description = "Dados da resposta")
+    @Schema(description = "Os dados de retorno da requisição. O tipo varia de acordo com o endpoint.")
     private T data;
 
-    @Schema(description = "Mensagem descritiva", example = "Operação realizada com sucesso")
+    @Schema(description = "Uma mensagem informativa sobre o resultado da operação.", example = "Operação realizada com sucesso.")
     private String message;
 
-    @Schema(description = "Timestamp da resposta", example = "2024-01-15T10:30:00")
+    @Schema(description = "Data e hora em que a resposta foi gerada.", example = "2025-09-06T10:30:00")
     private LocalDateTime timestamp;
 
     public ApiResponseWrapper() {
@@ -29,21 +33,4 @@ public class ApiResponseWrapper<T> {
         this.timestamp = LocalDateTime.now();
     }
 
-    public static <T> ApiResponseWrapper<T> success(T data, String message) {
-        return new ApiResponseWrapper<>(true, data, message);
-    }
-
-    public static <T> ApiResponseWrapper<T> error(String message) {
-        return new ApiResponseWrapper<>(false, null, message);
-    }
-
-    // Getters e Setters
-    public boolean isSuccess() { return success; }
-    public void setSuccess(boolean success) { this.success = success; }
-    public T getData() { return data; }
-    public void setData(T data) { this.data = data; }
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 }
