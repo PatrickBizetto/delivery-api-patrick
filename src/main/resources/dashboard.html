@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Sistema de Delivery</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 20px; }
+        h1 { text-align: center; color: #4a4a4a; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .metric-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; text-align: center; }
+        .metric-card h2 { margin: 0; font-size: 1.2em; color: #666; }
+        .metric-card .value { font-size: 2.5em; font-weight: bold; margin: 10px 0; color: #007bff; }
+    </style>
+</head>
+<body>
+
+    <h1>Dashboard de Monitoramento - Sistema de Delivery</h1>
+
+    <div class="grid-container">
+        <div class="metric-card">
+            <h2>Pedidos Processados</h2>
+            <div id="pedidos_total" class="value">0</div>
+        </div>
+        <div class="metric-card">
+            <h2>Pedidos com Sucesso</h2>
+            <div id="pedidos_sucesso" class="value">0</div>
+        </div>
+        <div class="metric-card">
+            <h2>Pedidos com Erro</h2>
+            <div id="pedidos_erro" class="value">0</div>
+        </div>
+        <div class="metric-card">
+            <h2>Usuários Ativos</h2>
+            <div id="usuarios_ativos" class="value">0</div>
+        </div>
+        <div class="metric-card">
+            <h2>Tempo Médio de Resposta (ms)</h2>
+            <div id="tempo_medio_pedido_ms" class="value">0</div>
+        </div>
+    </div>
+
+    <script>
+        function fetchMetrics() {
+            fetch('/dashboard/api/metrics')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('pedidos_total').textContent = data.pedidos_total.toFixed(0);
+                    document.getElementById('pedidos_sucesso').textContent = data.pedidos_sucesso.toFixed(0);
+                    document.getElementById('pedidos_erro').textContent = data.pedidos_erro.toFixed(0);
+                    document.getElementById('usuarios_ativos').textContent = data.usuarios_ativos.toFixed(0);
+                    document.getElementById('tempo_medio_pedido_ms').textContent = data.tempo_medio_pedido_ms.toFixed(2);
+                })
+                .catch(error => console.error('Erro ao buscar métricas:', error));
+        }
+
+        // Atualiza as métricas a cada 2 segundos
+        setInterval(fetchMetrics, 2000);
+        // Busca os dados na primeira vez que a página carrega
+        fetchMetrics();
+    </script>
+
+</body>
+</html>

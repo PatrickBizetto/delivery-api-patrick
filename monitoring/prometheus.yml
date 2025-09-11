@@ -1,0 +1,18 @@
+# Configuração global do Prometheus
+global:
+  scrape_interval: 15s # Com que frequência o Prometheus busca as métricas
+
+# Configuração dos "alvos" (targets) que serão monitorados
+scrape_configs:
+  # Um "job" para monitorar nossa API de delivery
+  - job_name: 'delivery-api'
+    
+    # Caminho onde as métricas estão expostas na nossa API
+    metrics_path: '/actuator/prometheus'
+    
+    # Configuração de onde encontrar a nossa aplicação
+    static_configs:
+      # 'app:8080' -> 'app' é o nome do serviço da nossa API no docker-compose.yml
+      # O Docker Compose criará uma rede interna onde os containers podem se
+      # comunicar usando os nomes dos serviços como hostname.
+      - targets: ['app:8080']
