@@ -1,5 +1,7 @@
 package com.delivery_api.dto;
 
+import java.io.Serializable;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Schema(description = "DTO para exibir os dados de um cliente.")
-public class ClienteResponseDTO {
+public class ClienteResponseDTO implements Serializable {
 
     @Schema(description = "ID único do cliente.", example = "1")
     private Long id;

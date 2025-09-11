@@ -3,12 +3,14 @@ package com.delivery_api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Schema(description = "Wrapper padrão para as respostas da API, encapsulando os dados, status e uma mensagem.")
-public class ApiResponseWrapper<T> {
+public class ApiResponseWrapper<T> implements Serializable{
 
     @Schema(description = "Indica se a requisição foi processada com sucesso.", example = "true")
     private boolean success;

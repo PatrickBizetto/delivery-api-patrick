@@ -1,5 +1,7 @@
 package com.delivery_api.dto;
 
+import java.io.Serializable;
+
 import com.delivery_api.enums.UserRole;
 import com.delivery_api.model.Usuario;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Schema(description = "DTO para exibir os dados de um usuário após login ou consulta.")
-public class UserResponse {
+public class UserResponse implements Serializable {
 
     @Schema(description = "ID único do usuário.", example = "1")
     private Long id;

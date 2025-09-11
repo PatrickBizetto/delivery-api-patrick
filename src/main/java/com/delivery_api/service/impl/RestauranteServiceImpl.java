@@ -17,6 +17,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+// 🔹 Imports necessários para o cache
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,8 +35,10 @@ public class RestauranteServiceImpl implements RestauranteService {
 
     @Autowired
     private ModelMapper modelMapper;
-
+    
+    // 🔹 Invalida o cache de categorias sempre que um novo restaurante é criado.
     @Override
+    @CacheEvict(value = "restaurantesPorCategoria", allEntries = true)
     public RestauranteResponseDTO cadastrarRestaurante(RestauranteDTO dto) {
         if (restauranteRepository.existsByTelefone(dto.getTelefone())) {
             throw new ConflictException("Telefone já cadastrado no sistema.", "telefone", dto.getTelefone());
@@ -46,20 +53,30 @@ public class RestauranteServiceImpl implements RestauranteService {
     @Override
     @Transactional(readOnly = true)
     public Page<RestauranteResponseDTO> listarRestaurantes(String categoria, Boolean ativo, Pageable pageable) {
+        // Caching de resultados paginados é complexo, então optamos por não cachear esta listagem geral.
         Page<Restaurante> restaurantesPage = restauranteRepository.findAll(pageable);
         return restaurantesPage.map(restaurante -> modelMapper.map(restaurante, RestauranteResponseDTO.class));
     }
 
+    // 🔹 Armazena o resultado no cache "restaurantes" usando o ID como chave.
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "restaurantes", key = "#id")
     public RestauranteResponseDTO buscarRestaurantePorId(Long id) {
+        System.out.println("### BUSCANDO RESTAURANTE DO BANCO DE DADOS (ID: " + id + ") ###");
         Restaurante restaurante = restauranteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Restaurante", id)); 
         return modelMapper.map(restaurante, RestauranteResponseDTO.class);
     }
 
+    // 🔹 Invalida múltiplos caches: o do restaurante específico pelo ID e o de todas as listas de categorias.
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "restaurantes", key = "#id"),
+        @CacheEvict(value = "restaurantesPorCategoria", allEntries = true)
+    })
     public RestauranteResponseDTO atualizarRestaurante(Long id, RestauranteDTO dto) {
+        System.out.println("### ATUALIZANDO RESTAURANTE E LIMPANDO CACHE (ID: " + id + ") ###");
         Restaurante restaurante = restauranteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Restaurante", id));
         
@@ -69,7 +86,12 @@ public class RestauranteServiceImpl implements RestauranteService {
         return modelMapper.map(restauranteAtualizado, RestauranteResponseDTO.class);
     }
 
+    // 🔹 A alteração de status também invalida os caches.
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "restaurantes", key = "#id"),
+        @CacheEvict(value = "restaurantesPorCategoria", allEntries = true)
+    })
     public RestauranteResponseDTO alterarStatusRestaurante(Long id) {
         Restaurante restaurante = restauranteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Restaurante", id));
@@ -80,9 +102,12 @@ public class RestauranteServiceImpl implements RestauranteService {
         return modelMapper.map(restaurante, RestauranteResponseDTO.class);
     }
 
+    // 🔹 Armazena a lista de restaurantes no cache "restaurantesPorCategoria", usando a categoria como chave.
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "restaurantesPorCategoria", key = "#categoria")
     public List<RestauranteResponseDTO> buscarRestaurantesPorCategoria(String categoria) {
+        System.out.println("### BUSCANDO RESTAURANTES POR CATEGORIA DO BANCO (CATEGORIA: " + categoria + ") ###");
         List<Restaurante> restaurantes = restauranteRepository.findByCategoriaAndAtivoTrue(categoria);
         return restaurantes.stream()
                 .map(restaurante -> modelMapper.map(restaurante, RestauranteResponseDTO.class))
@@ -102,8 +127,13 @@ public class RestauranteServiceImpl implements RestauranteService {
         // TODO: Implementar lógica de busca por proximidade
         return List.of();
     }
-
+    
+    // 🔹 Deletar um restaurante também invalida os caches.
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "restaurantes", key = "#id"),
+        @CacheEvict(value = "restaurantesPorCategoria", allEntries = true)
+    })
     public void deletarRestaurante(Long id) {
         if (!restauranteRepository.existsById(id)) {
             throw new EntityNotFoundException("Restaurante", id);
@@ -111,8 +141,7 @@ public class RestauranteServiceImpl implements RestauranteService {
         restauranteRepository.deleteById(id);
     }
     
-    // MÉTODO DE VERIFICAÇÃO DE SEGURANÇA
-    // Não tem @Override porque é um método de implementação interna, não parte do contrato público.
+    // MÉTODO DE VERIFICAÇÃO DE SEGURANÇA - Não precisa de cache
     public boolean isOwner(Long restauranteId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -122,8 +151,6 @@ public class RestauranteServiceImpl implements RestauranteService {
         Object principal = authentication.getPrincipal();
         if (principal instanceof Usuario) {
             Usuario usuarioLogado = (Usuario) principal;
-            
-            // Verifica se o usuário é do tipo RESTAURANTE e se o restauranteId dele é igual ao do parâmetro
             return usuarioLogado.getRestauranteId() != null && usuarioLogado.getRestauranteId().equals(restauranteId);
         }
 

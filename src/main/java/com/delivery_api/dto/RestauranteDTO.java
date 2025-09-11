@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Schema(description = "DTO com os dados necessários para cadastrar ou atualizar um restaurante.")
-public class RestauranteDTO {
+public class RestauranteDTO{
 
     @Schema(description = "Nome do restaurante. Deve ser único.", example = "Pizza Express", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Nome é obrigatório")

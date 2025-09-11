@@ -1,5 +1,7 @@
 package com.delivery_api.dto;
 
+import java.io.Serializable;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -8,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Schema(description = "Representa um item individual dentro de um pedido, com seu produto e quantidade.")
-public class ItemPedidoDTO {
+public class ItemPedidoDTO implements Serializable{
 
     @NotNull(message = "O ID do produto é obrigatório.")
     @Positive(message = "O ID do produto deve ser um número positivo.")

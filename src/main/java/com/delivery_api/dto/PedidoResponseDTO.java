@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @Schema(description = "DTO para exibir os dados detalhados de um pedido.")
-public class PedidoResponseDTO {
+public class PedidoResponseDTO implements Serializable{
 
     @Schema(description = "ID único do pedido.", example = "101")
     private Long id;
@@ -50,7 +51,7 @@ public class PedidoResponseDTO {
     @Getter
     @Setter
     @Schema(description = "DTO com informações resumidas de um Cliente.")
-    public static class ClienteResumidoDTO {
+    public static class ClienteResumidoDTO implements Serializable {
 
         @Schema(description = "ID do cliente.", example = "42")
         private Long id;
@@ -62,7 +63,7 @@ public class PedidoResponseDTO {
     @Getter
     @Setter
     @Schema(description = "DTO com informações resumidas de um Restaurante.")
-    public static class RestauranteResumidoDTO {
+    public static class RestauranteResumidoDTO implements Serializable {
 
         @Schema(description = "ID do restaurante.", example = "15")
         private Long id;

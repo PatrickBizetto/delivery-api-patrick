@@ -2,11 +2,13 @@ package com.delivery_api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
 @Schema(description = "DTO para representar os dados de um produto ao ser retornado pela API.")
-public class ProdutoResponseDTO {
+public class ProdutoResponseDTO implements Serializable {
 
     @Schema(description = "ID único do produto.", example = "101")
     private Long id;

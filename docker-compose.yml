@@ -1,29 +1,31 @@
 services:
   # Serviço 1: A aplicação Spring Boot
   app:
-    # Constrói a imagem a partir do Dockerfile no diretório atual (.)
     build: .
     container_name: delivery-api-app
-    # Mapeia a porta 8080 do container para a porta 8080 da sua máquina
     ports:
       - "8080:8080"
-    # Define as variáveis de ambiente que configuramos no application.yml
     environment:
-      - JWT_SECRET=suaChaveSecretaSuperSeguraParaJWT-MudeIsso
-      - ACTUATOR_PASSWORD=suaSenhaForteParaOActuator-MudeIsso
-  
+      - JWT_SECRET=${JWT_SECRET}
+      - ACTUATOR_PASSWORD=${ACTUATOR_PASSWORD} 
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+
   # Serviço 2: O monitor de métricas Prometheus
   prometheus:
-    # Usa a imagem oficial do Prometheus
     image: prom/prometheus:latest
     container_name: prometheus-monitor
-    # Mapeia a porta 9090 do container (UI do Prometheus) para a porta 9090 da sua máquina
     ports:
       - "9090:9090"
-    # Monta o arquivo de configuração do Prometheus para dentro do container
-    # <caminho na sua maquina>:<caminho dentro do container>
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    # Comando para iniciar o Prometheus com nosso arquivo de configuração
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      
+  # 👇 SERVIÇO 3: O REDIS 
+  redis:
+    image: "redis:7-alpine"
+    container_name: redis-cache
+    ports:
+      - "6379:6379"

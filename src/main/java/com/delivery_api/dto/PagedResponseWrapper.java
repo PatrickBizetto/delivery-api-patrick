@@ -3,11 +3,13 @@ package com.delivery_api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
+
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
 @Schema(description = "Wrapper padrão para respostas que retornam listas paginadas de dados.")
-public class PagedResponseWrapper<T> {
+public class PagedResponseWrapper<T> implements Serializable{
 
     @Schema(description = "A lista de itens contidos na página atual.")
     private List<T> content;
@@ -28,7 +30,7 @@ public class PagedResponseWrapper<T> {
     
     @Getter
     @Schema(description = "Detalhes sobre o estado da paginação.")
-    public static class PageInfo {
+    public static class PageInfo implements Serializable{
         @Schema(description = "O número da página atual, começando em 0.", example = "0")
         private final int number;
         
@@ -59,7 +61,7 @@ public class PagedResponseWrapper<T> {
 
     @Getter
     @Schema(description = "Links de navegação para a primeira, última, próxima e página anterior.")
-    public static class PageLinks {
+    public static class PageLinks implements Serializable{
         @Schema(description = "URL para a primeira página de resultados.", example = "/api/restaurantes?page=0&size=10")
         private String first;
         
@@ -72,7 +74,7 @@ public class PagedResponseWrapper<T> {
         @Schema(description = "URL para a página anterior de resultados (nulo se for a primeira).", example = "null")
         private String prev;
 
-        public PageLinks(Page<?> page) {
+        public PageLinks(Page<?>  page)  {
             // Lógica para gerar os links (pode ser melhorada com UriComponentsBuilder)
             // Para a documentação, o importante são os exemplos
             if (page.getTotalPages() > 1) {

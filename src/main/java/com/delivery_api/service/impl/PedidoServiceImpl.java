@@ -14,6 +14,9 @@ import com.delivery_api.service.PedidoService;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+// 🔹 Imports necessários para o cache
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -45,6 +48,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public PedidoResponseDTO criarPedido(PedidoDTO dto) {
+        // ... (lógica inalterada)
         // 1. Validar cliente
         Cliente cliente = clienteRepository.findById(dto.getClienteId())
                 .orElseThrow(() -> new EntityNotFoundException("Cliente não encontrado"));
@@ -110,9 +114,17 @@ public class PedidoServiceImpl implements PedidoService {
         return modelMapper.map(pedidoSalvo, PedidoResponseDTO.class);
     }
 
+    /**
+     * Busca um pedido por ID. O resultado será armazenado no cache "pedidos".
+     * A chave de cache será o ID do pedido.
+     * Na primeira busca, a query SQL será executada. Nas buscas seguintes pelo mesmo ID,
+     * o resultado virá diretamente do cache, otimizando a performance.
+     */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "pedidos", key = "#id")
     public PedidoResponseDTO buscarPedidoPorId(Long id) {
+        System.out.println("### BUSCANDO PEDIDO DO BANCO DE DADOS (ID: " + id + ") ###");
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado com ID: " + id));
         return modelMapper.map(pedido, PedidoResponseDTO.class);
@@ -127,8 +139,16 @@ public class PedidoServiceImpl implements PedidoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Atualiza o status de um pedido.
+     * Após a atualização, a entrada correspondente no cache "pedidos" será removida.
+     * Isso garante que a próxima vez que o pedido for buscado, os dados atualizados
+     * venham do banco de dados, mantendo a consistência.
+     */
     @Override
+    @CacheEvict(value = "pedidos", key = "#id")
     public PedidoResponseDTO atualizarStatusPedido(Long id, StatusPedido novoStatus) {
+        System.out.println("### ATUALIZANDO PEDIDO E LIMPANDO CACHE (ID: " + id + ") ###");
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado"));
         if (!isTransicaoValida(pedido.getStatus(), novoStatus)) {
@@ -142,6 +162,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional(readOnly = true)
     public BigDecimal calcularTotalPedido(List<ItemPedidoDTO> itens) {
+        // ... (lógica inalterada)
         BigDecimal total = BigDecimal.ZERO;
         for (ItemPedidoDTO item : itens) {
             Produto produto = produtoRepository.findById(item.getProdutoId())
@@ -152,8 +173,15 @@ public class PedidoServiceImpl implements PedidoService {
         return total;
     }
 
+    /**
+     * Cancela um pedido (atualiza o status para CANCELADO).
+     * Assim como na atualização, o cache para este pedido específico será invalidado
+     * para garantir que o status "CANCELADO" seja refletido em futuras consultas.
+     */
     @Override
+    @CacheEvict(value = "pedidos", key = "#id")
     public void cancelarPedido(Long id) {
+        System.out.println("### CANCELANDO PEDIDO E LIMPANDO CACHE (ID: " + id + ") ###");
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado"));
         if (!podeSerCancelado(pedido.getStatus())) {
@@ -166,8 +194,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional(readOnly = true)
     public Page<PedidoResponseDTO> listarPedidos(StatusPedido status, LocalDate dataInicio, LocalDate dataFim, Pageable pageable) {
-        // Lógica de busca com filtros precisa ser implementada no repositório.
-        // Por enquanto, usaremos o findAll como exemplo simples.
+        // ... (lógica inalterada)
         Page<Pedido> pedidosPage = pedidoRepository.findAll(pageable);
         return pedidosPage.map(pedido -> modelMapper.map(pedido, PedidoResponseDTO.class));
     }
@@ -175,7 +202,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> buscarPedidosPorRestaurante(Long restauranteId, StatusPedido status) {
-        // A lógica de filtro por status pode ser adicionada aqui ou no repositório.
+        // ... (lógica inalterada)
         List<Pedido> pedidos = pedidoRepository.findByRestauranteId(restauranteId);
         return pedidos.stream()
                 .map(pedido -> modelMapper.map(pedido, PedidoResponseDTO.class))
@@ -184,6 +211,7 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public CalculoPedidoResponseDTO calcularTotalPedido(CalculoPedidoDTO dto) {
+        // ... (lógica inalterada)
         Restaurante restaurante = restauranteRepository.findById(dto.getRestauranteId())
                 .orElseThrow(() -> new EntityNotFoundException("Restaurante não encontrado"));
 
@@ -205,6 +233,7 @@ public class PedidoServiceImpl implements PedidoService {
         return response;
     }
 
+    // --- Métodos privados e de autorização (inalterados) ---
     private boolean isTransicaoValida(StatusPedido statusAtual, StatusPedido novoStatus) {
         switch (statusAtual) {
             case PENDENTE:
