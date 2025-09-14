@@ -1,0 +1,36 @@
+# Nome do workflow
+name: CI Delivery API
+
+# Gatilhos: Roda em push e pull request para qualquer branch
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    # Máquina virtual para rodar o job
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Baixa o código do repositório
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # 2. Configura o ambiente Java
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin' 
+          cache: maven # Adiciona cache para acelerar builds futuros
+
+      # 3. Roda os testes e empacota a aplicação
+      # O comando 'verify' já compila, testa e gera o arquivo .jar
+      - name: Build e Testes com Maven
+        run: ./mvnw clean verify # <-- Este comando único já faz tudo
+
+      # 4. Faz o upload do artefato gerado
+      # O artefato poderá ser baixado na página da execução do workflow
+      - name: Upload do JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: delivery-api-jar # Nome do artefato no GitHub
+          path: target/*.jar 
